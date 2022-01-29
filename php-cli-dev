@@ -1,0 +1,36 @@
+################################################
+# Dockerfile for local development with php-cli
+################################################
+
+FROM php:7.4-cli
+
+ARG USERNAME=dev
+ARG ERROR_LOG=/var/log/php-errors.log
+
+############
+# Tools 
+############
+RUN apt-get update \
+  && apt-get install -y neovim
+
+############
+# Sudo 
+############
+RUN useradd -m ${USERNAME} \
+  && apt-get install sudo \
+  && adduser ${USERNAME} sudo \
+  && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+############
+# Error Log
+############
+RUN touch ${ERROR_LOG} \
+  && chown ${USERNAME}: ${ERROR_LOG} \
+  && echo "error_log = ${ERROR_LOG}" >> /usr/local/etc/php/php.ini
+
+WORKDIR /workspaces
+RUN chown ${USERNAME}: /workspaces
+USER ${USERNAME}
+
+ENTRYPOINT ["tail"]
+CMD ["-f", "/var/log/php-errors.log"]
